@@ -1,12 +1,2 @@
-2025-04-29 07:56:46,139 [INFO] AI_SALES_AGENT: Customer test_customer_123 - New Interaction: We're interested in your product but concerned about the implementation timeline.
-2025-04-29 07:56:46,142 [INFO] AI_SALES_AGENT: Customer test_customer_123 - Insight (Interaction Analysis): []
-2025-04-29 07:56:46,143 [ERROR] AI_SALES_AGENT: Customer test_customer_123 - Interaction Analysis: 'SalesConversionAgent' object has no attribute '_analyze_sentiment'
-2025-04-29 07:56:46,646 [INFO] AI_SALES_AGENT: Customer test_customer_123 - Objection (New Objection): Your product is too expensive for our budget.
-2025-04-29 07:56:46,910 [INFO] AI_SALES_AGENT: Customer test_customer_123 - Objection (other): Your product is too expensive for our budget.
-2025-04-29 07:56:46,912 [ERROR] AI_SALES_AGENT: Customer test_customer_123 - Objection Handling: 'SalesConversionAgent' object has no attribute '_generate_response_strategy'
-2025-04-29 08:05:37,541 [INFO] AI_SALES_AGENT: Customer test_customer_123 - New Interaction: We're interested in your product but concerned about the implementation timeline.
-2025-04-29 08:05:37,545 [INFO] AI_SALES_AGENT: Customer test_customer_123 - Insight (Interaction Analysis): []
-2025-04-29 08:05:37,546 [ERROR] AI_SALES_AGENT: Customer test_customer_123 - Interaction Analysis: 'SalesConversionAgent' object has no attribute '_analyze_sentiment'
-2025-04-29 08:05:38,112 [INFO] AI_SALES_AGENT: Customer test_customer_123 - Objection (New Objection): Your product is too expensive for our budget.
-2025-04-29 08:05:38,412 [INFO] AI_SALES_AGENT: Customer test_customer_123 - Objection (other): Your product is too expensive for our budget.
-2025-04-29 08:05:38,413 [ERROR] AI_SALES_AGENT: Customer test_customer_123 - Objection Handling: 'SalesConversionAgent' object has no attribute '_generate_response_strategy'
+2025-04-29 10:47:56,424 [INFO] AI_SALES_AGENT: Customer test_customer_123 - New Interaction: We're interested in your product but concerned about the implementation timeline.
+2025-04-29 10:47:56,427 [INFO] AI_SALES_AGENT: Customer test_customer_123 - Insight (Interaction Analysis): []

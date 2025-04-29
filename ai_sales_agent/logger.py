@@ -49,6 +49,10 @@ class AgentLogger:
     def log_proposal(self, customer_id: str, proposal_type: str, status: str):
         """Log proposal generation and status"""
         self.logger.info(f"Customer {customer_id} - Proposal ({proposal_type}): {status}")
+        
+    def log_info(self, info_type: str, message: str):
+        """Log general information"""
+        self.logger.info(f"{info_type}: {message}")
 
 # Create a global logger instance
 logger = AgentLogger()

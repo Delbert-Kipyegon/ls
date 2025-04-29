@@ -1474,7 +1474,7 @@ class SalesConversionAgent:
                 device = "cuda" if torch.cuda.is_available() else "cpu"
                 
                 # Initialize the model and tokenizer
-                model_name = "google/gemma-3b"
+                model_name = "google/gemma-3-1b-it"
                 self._llm_tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
                 self._llm_model = AutoModelForCausalLM.from_pretrained(
                     model_name, 
@@ -1495,7 +1495,7 @@ class SalesConversionAgent:
             with torch.no_grad():
                 outputs = self._llm_model.generate(
                     **inputs, 
-                    max_length=800,  # Longer output to ensure we get full insights
+                    max_new_tokens=800,  # Longer output to ensure we get full insights
                     num_return_sequences=1,
                     temperature=0.7,  # Add some creativity but not too random
                     do_sample=True,
@@ -1573,7 +1573,12 @@ class SalesConversionAgent:
             # Update customer record
             self._update_customer_record(customer_id, interaction_text, insights)
             
-            return insights
+            # Return structured response with expected keys
+            return {
+                "sentiment": self._analyze_sentiment(interaction_text),
+                "topics": self._extract_topics(interaction_text),
+                "recommended_actions": self._generate_recommended_actions(customer)
+            }
             
         except Exception as e:
             self.logger.log_error("Interaction Analysis", str(e), customer_id)
@@ -1686,6 +1691,7 @@ class SalesConversionAgent:
             follow_up = self._generate_follow_up_strategy(customer_id, objection_type)
             self.logger.log_insight(customer_id, "Follow-up Strategy", follow_up)
             
+            # Return structured response with expected keys
             return {
                 "objection_type": objection_type,
                 "response": response,
@@ -1713,7 +1719,7 @@ class SalesConversionAgent:
             Respond with only the category name.
             """
             
-            model_name = "google/gemma-3b"
+            model_name = "google/gemma-3-1b-it"
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             model = AutoModelForCausalLM.from_pretrained(model_name)
             
@@ -1750,7 +1756,7 @@ class SalesConversionAgent:
             Provide a structured follow-up plan.
             """
             
-            model_name = "google/gemma-3b"
+            model_name = "google/gemma-3-1b-it"
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             model = AutoModelForCausalLM.from_pretrained(model_name)
             
@@ -1877,7 +1883,7 @@ class SalesConversionAgent:
             """
             
             # Get LLM-generated proposal
-            model_name = "google/gemma-3b"
+            model_name = "google/gemma-3-1b-it"
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             model = AutoModelForCausalLM.from_pretrained(model_name)
             
@@ -1930,13 +1936,11 @@ class SalesConversionAgent:
             outputs = model.generate(**inputs, max_length=300, num_return_sequences=1)
             pricing_section = tokenizer.decode(outputs[0], skip_special_tokens=True)
             
+            # Return structured response with expected keys
             return {
-                "customer_name": customer["name"],
                 "proposal_content": proposal_content,
                 "executive_summary": executive_summary,
-                "pricing_section": pricing_section,
-                "recommended_product": proposal_data["recommended_product"],
-                "next_steps": self._generate_proposal_next_steps(customer)
+                "pricing_section": pricing_section
             }
             
         except Exception as e:
@@ -1963,7 +1967,7 @@ class SalesConversionAgent:
             Provide a structured action plan.
             """
             
-            model_name = "google/gemma-3b"
+            model_name = "google/gemma-3-1b-it"
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             model = AutoModelForCausalLM.from_pretrained(model_name)
             
@@ -2017,140 +2021,140 @@ class SalesConversionAgent:
         
         return stakeholder_map.get(size, ["Primary Contact"])
 
-def _initialize_gemma_model(self):
-    """Initialize the Gemma model and tokenizer with proper authentication"""
-    if not hasattr(self, '_llm_model') or not hasattr(self, '_llm_tokenizer'):
-        try:            
-            # Check for HF token
-            hf_token = os.environ.get("HF_TOKEN")
-            if not hf_token:
-                raise ValueError("Hugging Face token not found. Set HF_TOKEN environment variable.")
-            
-            # Get device
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            
-            # Initialize the model and tokenizer
-            model_name = "google/gemma-3b"
-            self._llm_tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
-            self._llm_model = AutoModelForCausalLM.from_pretrained(
-                model_name, 
-                token=hf_token,
-                device_map="auto" if device == "cuda" else None,
-                torch_dtype=torch.float16 if device == "cuda" else torch.float32
-            )
-            self._llm_device = device
-            self.logger.log_info("Model Initialization", f"Gemma model initialized on {device}")
-            return True
-        except Exception as e:
-            self.logger.log_error("Model Initialization", f"Failed to initialize Gemma model: {str(e)}")
-            return False
-    return True
-
-def _analyze_sentiment(self, text: str) -> str:
-    """Analyze sentiment of interaction text"""
-    try:
-        # Initialize model if not already done
-        if not self._initialize_gemma_model():
-            return "neutral"  # Fallback if initialization fails
-            
-        prompt = f"""
-        Analyze the sentiment of this text and classify it as positive, negative, or neutral:
-        
-        {text}
-        
-        Respond with only one word: positive, negative, or neutral.
-        """
-        
-        # Tokenize input with proper padding
-        inputs = self._llm_tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
-        
-        # Move inputs to device
-        if hasattr(self, '_llm_device') and self._llm_device == "cuda":
-            inputs = {k: v.to("cuda") for k, v in inputs.items()}
-        
-        # Generate response with proper parameters
-        with torch.no_grad():
-            outputs = self._llm_model.generate(
-                **inputs, 
-                max_length=10,  # Short output for sentiment
-                num_return_sequences=1,
-                temperature=0.1,  # Low temperature for deterministic output
-                do_sample=False   # We want deterministic output for sentiment
-            )
-        
-        sentiment = self._llm_tokenizer.decode(outputs[0], skip_special_tokens=True).strip().lower()
-        
-        # Extract just the sentiment word (in case model outputs more text)
-        for valid_sentiment in ["positive", "negative", "neutral"]:
-            if valid_sentiment in sentiment:
-                return valid_sentiment
+    def _initialize_gemma_model(self):
+        """Initialize the Gemma model and tokenizer with proper authentication"""
+        if not hasattr(self, '_llm_model') or not hasattr(self, '_llm_tokenizer'):
+            try:            
+                # Check for HF token
+                hf_token = os.environ.get("HF_TOKEN")
+                if not hf_token:
+                    raise ValueError("Hugging Face token not found. Set HF_TOKEN environment variable.")
                 
-        # Fallback to neutral if no valid sentiment found
-        return "neutral"
-        
-    except Exception as e:
-        self.logger.log_error("Sentiment Analysis", str(e))
-        return "neutral"
+                # Get device
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+                
+                # Initialize the model and tokenizer
+                model_name = "google/gemma-3-1b-it"
+                self._llm_tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
+                self._llm_model = AutoModelForCausalLM.from_pretrained(
+                    model_name, 
+                    token=hf_token,
+                    device_map="auto" if device == "cuda" else None,
+                    torch_dtype=torch.float16 if device == "cuda" else torch.float32
+                )
+                self._llm_device = device
+                self.logger.log_info("Model Initialization", f"Gemma model initialized on {device}")
+                return True
+            except Exception as e:
+                self.logger.log_error("Model Initialization", f"Failed to initialize Gemma model: {str(e)}")
+                return False
+        return True
 
-def _generate_response_strategy(self, objection_data: Dict[str, Any]) -> str:
-    """Generate a response strategy for an objection"""
-    try:
-        # Initialize model if not already done
-        if not self._initialize_gemma_model():
-            return "I apologize, but I'm having trouble generating a response at the moment. Please try again later."
+    def _analyze_sentiment(self, text: str) -> str:
+        """Analyze sentiment of interaction text"""
+        try:
+            # Initialize model if not already done
+            if not self._initialize_gemma_model():
+                return "neutral"  # Fallback if initialization fails
+                
+            prompt = f"""
+            Analyze the sentiment of this text and classify it as positive, negative, or neutral:
             
-        prompt = f"""
-        Generate a response strategy for this customer objection:
-        
-        Customer Details:
-        {json.dumps(objection_data['customer_details'], indent=2)}
-        
-        Objection Text:
-        {objection_data['objection_text']}
-        
-        Previous Objections:
-        {json.dumps(objection_data['previous_objections'], indent=2)}
-        
-        Consider:
-        1. Customer's industry and size
-        2. Previous objections and concerns
-        3. Current sales stage
-        4. Available products and solutions
-        
-        Provide a natural, conversational response that addresses the objection while maintaining a professional tone.
-        """
-        
-        # Tokenize input with proper padding
-        inputs = self._llm_tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
-        
-        # Move inputs to device
-        if hasattr(self, '_llm_device') and self._llm_device == "cuda":
-            inputs = {k: v.to("cuda") for k, v in inputs.items()}
-        
-        # Generate response with proper parameters
-        with torch.no_grad():
-            outputs = self._llm_model.generate(
-                **inputs,
-                max_length=800,  # Longer context for better response
-                num_return_sequences=1,
-                temperature=0.7,  # Add some creativity
-                top_p=0.9,
-                repetition_penalty=1.2,
-                do_sample=True
-            )
-        
-        response = self._llm_tokenizer.decode(outputs[0], skip_special_tokens=True)
-        
-        # Clean up response by removing the prompt
-        if prompt in response:
-            response = response[response.find(prompt) + len(prompt):].strip()
-        
-        return response
-        
-    except Exception as e:
-        import traceback
-        self.logger.log_error("Response Strategy Generation", str(e))
-        self.logger.log_error("Traceback", traceback.format_exc())
-        return "I apologize, but I'm having trouble generating a response at the moment. Please try again later."
+            {text}
+            
+            Respond with only one word: positive, negative, or neutral.
+            """
+            
+            # Tokenize input with proper padding
+            inputs = self._llm_tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
+            
+            # Move inputs to device
+            if hasattr(self, '_llm_device') and self._llm_device == "cuda":
+                inputs = {k: v.to("cuda") for k, v in inputs.items()}
+            
+            # Generate response with proper parameters
+            with torch.no_grad():
+                outputs = self._llm_model.generate(
+                    **inputs, 
+                    max_new_tokens=20,  # Short output for sentiment
+                    num_return_sequences=1,
+                    temperature=0.1,  # Low temperature for deterministic output
+                    do_sample=False   # We want deterministic output for sentiment
+                )
+            
+            sentiment = self._llm_tokenizer.decode(outputs[0], skip_special_tokens=True).strip().lower()
+            
+            # Extract just the sentiment word (in case model outputs more text)
+            for valid_sentiment in ["positive", "negative", "neutral"]:
+                if valid_sentiment in sentiment:
+                    return valid_sentiment
+                    
+            # Fallback to neutral if no valid sentiment found
+            return "neutral"
+            
+        except Exception as e:
+            self.logger.log_error("Sentiment Analysis", str(e))
+            return "neutral"
+
+    def _generate_response_strategy(self, objection_data: Dict[str, Any]) -> str:
+        """Generate a response strategy for an objection"""
+        try:
+            # Initialize model if not already done
+            if not self._initialize_gemma_model():
+                return "I apologize, but I'm having trouble generating a response at the moment. Please try again later."
+                
+            prompt = f"""
+            Generate a response strategy for this customer objection:
+            
+            Customer Details:
+            {json.dumps(objection_data['customer_details'], indent=2)}
+            
+            Objection Text:
+            {objection_data['objection_text']}
+            
+            Previous Objections:
+            {json.dumps(objection_data['previous_objections'], indent=2)}
+            
+            Consider:
+            1. Customer's industry and size
+            2. Previous objections and concerns
+            3. Current sales stage
+            4. Available products and solutions
+            
+            Provide a natural, conversational response that addresses the objection while maintaining a professional tone.
+            """
+            
+            # Tokenize input with proper padding
+            inputs = self._llm_tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
+            
+            # Move inputs to device
+            if hasattr(self, '_llm_device') and self._llm_device == "cuda":
+                inputs = {k: v.to("cuda") for k, v in inputs.items()}
+            
+            # Generate response with proper parameters
+            with torch.no_grad():
+                outputs = self._llm_model.generate(
+                    **inputs,
+                    max_new_token=300,  # Longer context for better response
+                    num_return_sequences=1,
+                    temperature=0.7,  # Add some creativity
+                    top_p=0.9,
+                    repetition_penalty=1.2,
+                    do_sample=True
+                )
+            
+            response = self._llm_tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+            # Clean up response by removing the prompt
+            if prompt in response:
+                response = response[response.find(prompt) + len(prompt):].strip()
+            
+            return response
+            
+        except Exception as e:
+            import traceback
+            self.logger.log_error("Response Strategy Generation", str(e))
+            self.logger.log_error("Traceback", traceback.format_exc())
+            return "I apologize, but I'm having trouble generating a response at the moment. Please try again later."
 
 agent = SalesConversionAgent(crm_data_path="Raw_data\çrm_interactions.csv", use_llm=True)
